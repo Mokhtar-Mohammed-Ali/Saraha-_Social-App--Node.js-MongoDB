@@ -1,5 +1,9 @@
-import  mongoose  from "mongoose";
-import { GenderEnumms, ProviderEnumms } from "../../common/enumms/index.js";
+import mongoose from "mongoose";
+import {
+  GenderEnumms,
+  ProviderEnumms,
+  RoleEnumms,
+} from "../../common/enums/index.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -25,29 +29,36 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(GenderEnumms),
       default: GenderEnumms.Male,
     },
-    password: { type: String, required: true },
-    phone: { type: String, required: true },
+    password: { type: String,  required: function () { return this.provider == ProviderEnumms.SYSTEM; } },
+    // phone: { type: String, required: true },
+    phone: { 
+  type: String, 
+  required: function () { return this.provider == ProviderEnumms.SYSTEM; } 
+},
     picCover: { type: [String] },
-   picprofile: { type: String },
+    picprofile: { type: String },
     provider: {
-      type: String,
+      type: Number,
       enum: Object.values(ProviderEnumms),
       default: ProviderEnumms.SYSTEM,
     },
-    role: { type: String, enum: ["ADMIN", "USER"], default: "USER" },
+    role: {
+      type: Number,
+      enum: Object.values(RoleEnumms),
+      default: RoleEnumms.User,
+    },
   },
- {
-  timestamps: true,
-  collection: "SARAHA_USERS",
-  validateBeforeSave: true,
-  optimisticConcurrency: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
-  strict: true,
-  strictQuery: true,
-  autoIndex: true,
-}
-
+  {
+    timestamps: true,
+    collection: "SARAHA_USERS",
+    validateBeforeSave: true,
+    optimisticConcurrency: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    strict: true,
+    strictQuery: true,
+    autoIndex: true,
+  },
 );
 userSchema
   .virtual("userName")

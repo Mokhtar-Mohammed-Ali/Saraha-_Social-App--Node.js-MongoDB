@@ -1,14 +1,14 @@
 
-import { port } from '../config/config.service.js'
-import { globalErrorHandling } from './common/utils/index.js'
-import { connectionDB } from './DB/index.js'
-import { authRouter, userRouter } from './modules/index.js'
-import express from 'express'
-
+import { port } from '../config/config.service.js';
+import { globalErrorHandling } from './common/utils/index.js';
+import { connectionDB } from './DB/index.js';
+import { authRouter, userRouter } from './modules/index.js';
+import express from 'express';
+import cors from 'cors';
 async function bootstrap() {
     const app = express()
     //convert buffer data
-    app.use(express.json())
+    app.use(cors(),express.json())
     // DB connection
     await connectionDB()
     //application routing
