@@ -4,12 +4,16 @@
 //   TOKEN_SECRET_USER_ACCESS,
 //   TOKEN_SECRET_USER_REFRESH,
 // } from "../../../config/config.service.js";
-import { TokenTypeEnum } from "../../common/enums/security.enums.js";
+// import { TokenTypeEnum } from "../../common/enums/security.enums.js";
+import { BadRequestException, encrypt, NotFoundException } from "../../common/utils/index.js";
 import { decodeToken, loginCredentials } from "../../common/utils/security/token.security.js";
-import { findById } from "../../DB/database.repository.js";
+import { findById, findOne, updateOne } from "../../DB/database.repository.js";
 import { userModel } from "../../DB/index.js";
-import jwt from "jsonwebtoken";
+// import jwt from "jsonwebtoken";
 // import {users} from '../../DB/model/index.js'
+
+
+// profile
 export const profile = async (user) => {
   // const user = await decodeToken({token: authorization});
   // console.log({ decoded });
@@ -31,6 +35,92 @@ export const profile = async (user) => {
 
   return user;
 };
+// shared profile
+export const sharedProfile =async(userId)=>{
+  const account = await findOne({model:userModel,filter:{_id:userId},select:"-passsword"});
+  if(!account){
+    throw NotFoundException("user not found");
+  }
+  if(account.phone){
+    account.phone = await encrypt(account.phone);
+  }
+  return account;
+}
+// profile image
+export const profileImage=async(file,user)=>{
+
+   if (user.profilePic) {
+
+    if (!user.profileGallery) {
+      user.profileGallery = [];
+    }
+
+    user.profileGallery.push(user.profilePic);
+  }
+user.profilePic=file.finalPath;
+await user.save();
+return user
+}
+//profile cover images
+
+
+// export const profileCoverImage=async(files,user)=>{
+
+//    const newImages = files.map(file => file.finalPath);
+//    const totalImages = [...user.profilePicCover, ...newImages];
+
+//     if (totalImages.length > 5) {
+//    throw BadRequestException({
+//       message: "Maximum 5 cover images allowed",
+//     });
+//   }
+// user.profilePicCover=totalImages;
+// //  user.profilePicCover = totalImages.slice(-5); keep oly 5
+// await user.save();
+// return user
+// }
+
+
+
+// profile cover images by mongoose methods
+
+export const profileCoverImage = async (files, user) => {
+
+  const newImages = files.map(file => file.finalPath);
+
+  const result = await updateOne({
+    model: userModel,
+    filter: {
+      _id: user._id,
+      $expr: {
+        $lte: [
+          { $size: { $ifNull: ["$profilePicCover", []] } },
+          5 - newImages.length
+        ]
+      }
+    },
+    update: {
+      $push: {
+        profilePicCover: {
+          $each: newImages
+        }
+      }
+    }
+  });
+
+  if (!result.modifiedCount) {
+    throw  BadRequestException({
+      message: "Maximum 5 cover images allowed",
+    });
+  }
+
+  return await findById({
+    model: userModel,
+    id: user._id
+  });
+};
+
+
 
 // refresh token
 export const rotateToken = async (user, issuer) => {

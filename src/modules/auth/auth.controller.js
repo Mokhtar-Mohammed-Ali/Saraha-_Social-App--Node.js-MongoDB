@@ -2,8 +2,10 @@ import { Router } from "express";
 import { login, signup, signupWithGmail, } from "./auth.service.js";
 import { SuccessResponse } from "../../common/utils/index.js";
 import { verifyOTP } from "./otp.service.js";
+import * as validators from "./auth.validation.js";
+import { validation } from "../../middlware/validation.middleware.js";
 const router = Router();
-router.post("/signup", async (req, res, next) => {
+router.post("/signup",validation(validators.signup) ,async (req, res, next) => {
   const result = await signup(req.body);
 
   return SuccessResponse({
@@ -14,7 +16,7 @@ router.post("/signup", async (req, res, next) => {
   });
 });
 // login
-router.post("/login", async (req, res, next) => {
+router.post("/login", validation(validators.login), async (req, res, next) => {
   const result = await login(req.body,`${req.protocol}://${req.host}`)
 
   return SuccessResponse({

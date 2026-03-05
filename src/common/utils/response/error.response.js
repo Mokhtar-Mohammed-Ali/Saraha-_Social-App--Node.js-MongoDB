@@ -54,11 +54,13 @@ export const globalErrorHandling = (error, req, res, next) => {
   const displayErrorMessage = error.message || defaultErrorMessage;
   return res.status(status).json({
     status,
-    stack: mood ? undefined : error.stack,
+   
     errorMessage: mood
       ? status === 500
         ? defaultErrorMessage
         : displayErrorMessage
       : displayErrorMessage,
+       stack: mood ? undefined : error.stack,
+       extra: error?.cause?.extra || undefined,
   });
 };

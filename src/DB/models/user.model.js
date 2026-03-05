@@ -35,8 +35,9 @@ const userSchema = new mongoose.Schema(
   type: String, 
   required: function () { return this.provider == ProviderEnumms.SYSTEM; } 
 },
-    picCover: { type: [String] },
-    picprofile: { type: String },
+    profilePicCover: { type: [String] },
+    profilePic: { type: String },
+    profileGallery: {type:[String]},
     provider: {
       type: Number,
       enum: Object.values(ProviderEnumms),

@@ -5,10 +5,13 @@ import { connectionDB } from './DB/index.js';
 import { authRouter, userRouter } from './modules/index.js';
 import express from 'express';
 import cors from 'cors';
+import { resolve } from 'path';
 async function bootstrap() {
     const app = express()
     //convert buffer data
     app.use(cors(),express.json())
+    // uploads folder static access
+    app.use("/uploads", express.static(resolve("../uploads")));
     // DB connection
     await connectionDB()
     //application routing
