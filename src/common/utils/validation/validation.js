@@ -2,6 +2,9 @@ import joi from 'joi';
 import { Types } from 'mongoose';
 
 export const generalValidationFields = {
+  otp: joi.string().pattern(
+    new RegExp(/^\d{6}$/)
+  ),
 
   email: joi.string().email({
     minDomainSegments: 2,

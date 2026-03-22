@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { login, signup, signupWithGmail, } from "./auth.service.js";
+import { confirmEmail, login, resendConfirmEmail, signup, signupWithGmail, } from "./auth.service.js";
 import { SuccessResponse } from "../../common/utils/index.js";
-import { verifyOTP } from "./otp.service.js";
+// import { verifyOTP } from "./otp.service.js";
 import * as validators from "./auth.validation.js";
 import { validation } from "../../middlware/validation.middleware.js";
 const router = Router();
@@ -30,13 +30,20 @@ router.post("/login", validation(validators.login), async (req, res, next) => {
 
 //Otp verification route
 
-router.post("/verify-email", async (req, res, next) => {
-  const result = await verifyOTP(req.body);
+router.patch("/verify-email",validation(validators.confirmEmail), async (req, res, next) => {
+  const account = await confirmEmail(req.body);
 
   return SuccessResponse({
-    res,
-    message: "Email verified successfully",
-    data: { result },
+    res
+  });
+});
+
+// resend confirm email otp
+router.patch("/resend-verify-email",validation(validators.resendConfirmEmail), async (req, res, next) => {
+ await resendConfirmEmail(req.body);
+
+  return SuccessResponse({
+    res
   });
 });
 

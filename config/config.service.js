@@ -14,6 +14,7 @@ config({ path: resolve(`./config/${envPath[NODE_ENV]}`) });
 export const port = process.env.PORT ?? 7000;
 
 export const DB_URI = process.env.DB_URI;
+export const REDI_URI = process.env.REDI_URI;
 
 export const SALT_ROUND = parseInt(process.env.SALT_ROUND ?? "10");
 export const ENCRYPTION_SECRET_BITE = process.env.ENCRYPTION_SECRET_BITE;
@@ -32,6 +33,8 @@ export const REFRESH_TOKEN_EXPIRATION = parseInt(
   process.env.REFRESH_TOKEN_EXPIRATION,
 );
 export const WEB_CLIENT_ID = process.env.WEB_CLIENT_ID;
-
-
+// links template
+export const Twitter_LINK = process.env.Twitter_LINK;
+export const Facebook_LINK = process.env.Facebook_LINK;
+export const Instagram_LINK = process.env.Instagram_LINK;
 console.log({ SALT_ROUND });

@@ -6,15 +6,20 @@ import {
   TOKEN_SECRET_USER_ACCESS,
   TOKEN_SECRET_USER_REFRESH,
 } from "../../../../config/config.service.js";
+import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { findOne } from "../../../DB/database.repository.js";
 import { userModel } from "../../../DB/models/user.model.js";
 import {
   BadRequestException,
   NotFoundException,
+  UnauthorizedException,
 } from "../response/error.response.js";
 import { TokenTypeEnum } from "../../enums/security.enums.js";
 import { RoleEnumms } from "../../enums/user.enums.js";
+import { model } from "mongoose";
+import { tokenModel } from "../../../DB/index.js";
+import { get, revokeTokenKey } from "../../services/redis.services.js";
 // generate token
 export const generateToken = async ({
   payload = {},
@@ -81,6 +86,13 @@ export const decodeToken = async ({
     throw BadRequestException({
       message: `invalid token type ${tokenType}❎ you must be ${tokeApproatch} ✅`,
     });
+  if (
+    decoded.jti &&
+    (await get(revokeTokenKey({ userId: decoded.sub, jti: decoded.jti} )))
+  ) {
+    throw UnauthorizedException({ message: "invalid login session" });
+  }
+
   const secretSignature = getTokenSignature({
     tokenType: tokeApproatch,
     level,
@@ -92,10 +104,21 @@ export const decodeToken = async ({
     filter: { _id: verifyedData.sub },
   });
   if (!user) throw NotFoundException({ message: "user not found" });
-  return user;
+  console.log({
+    credentialTime: user.changeCredentialsTime?.getTime(),
+    iat: decoded.iat * 1000,
+  });
+  if (
+    user.changeCredentialsTime &&
+    user.changeCredentialsTime.getTime() >= decoded.iat * 1000
+  )
+    throw BadRequestException({ message: "invalid login session" });
+
+  return { user, decoded };
 };
 // login and generate access and refresh token
 export const loginCredentials = async (user, issuer) => {
+  const jwtId = randomUUID();
   const { accessSignature, refreshSignature } = getTokenSignatureLevel(
     user.role,
   );
@@ -107,7 +130,7 @@ export const loginCredentials = async (user, issuer) => {
       audience: [TokenTypeEnum.ACCESS, user.role], // who will use this token
       issuer: issuer, // who create this token
       algorithm: "HS256", // algorithm to encrypt the token
-      // jwtid: user._id.toString() + Math.floor(Math.random() * 100), // unique id for the token
+      jwtid: jwtId, // unique id for the token
       // notBefore: "1s", // not before 1 second
     },
   });
@@ -128,7 +151,7 @@ export const loginCredentials = async (user, issuer) => {
       audience: [TokenTypeEnum.REFRESH, user.role], // who will use this token
       issuer: issuer, // who create this token
       algorithm: "HS256", // algorithm to encrypt the token
-      // jwtid: user._id.toString() + Math.floor(Math.random() * 100), // unique id for the token
+      jwtid: jwtId, // unique id for the token
     },
   });
   //  jwt.sign({ sub: user._id }, TOKEN_SECRET_USER_REFRESH, {

@@ -29,7 +29,10 @@ export const authenticationMiddleware = (tokenType = TokenTypeEnum.ACCESS) => {
         }
 
         case "Bearer": {
-          req.user = await decodeToken({ token: credentials, tokenType });
+         const { user, decoded } = await decodeToken({ token: credentials, tokenType });
+         req.user = user;
+         req.decoded = decoded;
+
           return next();
         }
 

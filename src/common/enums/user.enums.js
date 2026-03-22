@@ -10,3 +10,7 @@ export const ProviderEnumms = {
   GOOGLE: 1,
   SYSTEM: 0,
 };
+export const logoutEnumms = {
+  ALL: 0,
+  ONLY: 1,
+};

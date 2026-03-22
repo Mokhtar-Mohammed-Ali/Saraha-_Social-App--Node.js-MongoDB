@@ -5,6 +5,7 @@ import {
   profileImage,
   rotateToken,
   sharedProfile,
+  logout,
 } from "./user.service.js";
 import {
   fileFieldValidation,
@@ -21,6 +22,17 @@ import { sharedProfileValidation } from "./user.validation.js";
 import * as validators from "./user.validation.js";
 import { validation } from "../../middlware/validation.middleware.js";
 const router = Router();
+
+//logout route
+router.post("/logout",authenticationMiddleware(),async (req, res, next) => {
+  const status =await logout(req.body,req.user,req.decoded);
+  return SuccessResponse({
+    res,
+    data: { status }
+  });
+}
+)
+
 // profile route
 router.get(
   "/",
@@ -121,14 +133,15 @@ router.patch(
 );
 
 // refresh token route
-router.get(
+router.post(
   "/refresh",
   authenticationMiddleware(TokenTypeEnum.REFRESH),
   async (req, res, next) => {
-    const result = await rotateToken(req.user, `${req.protocol}://${req.host}`);
+    const credentials = await rotateToken(req.user, req.decoded, `${req.protocol}://${req.host}`);
     return SuccessResponse({
       res,
-      data: { result },
+      status: 201,
+      data: { ...credentials },
     });
   },
 );
