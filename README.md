@@ -94,7 +94,7 @@ GOOGLE_CLIENT_SECRET=your_secret
 Clone the repository:
 
 Bash
-git clone https://github.com/Mokhtar-Mohammed-Ali/saraha-api.git
+git clone  https://github.com/Mokhtar-Mohammed-Ali/Saraha-_Social-App--Node.js-MongoDB.git
 Install dependencies:
 
 Bash
