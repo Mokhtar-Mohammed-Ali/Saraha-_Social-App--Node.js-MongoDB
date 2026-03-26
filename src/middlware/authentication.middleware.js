@@ -9,7 +9,7 @@ export const authenticationMiddleware = (tokenType = TokenTypeEnum.ACCESS) => {
 
       if (!authorization) {
         return next(
-          new BadRequestException({ message: "missing authorization header" })
+           BadRequestException({ message: "missing authorization header" })
         );
       }
 

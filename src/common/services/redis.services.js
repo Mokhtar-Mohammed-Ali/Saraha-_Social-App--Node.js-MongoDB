@@ -21,7 +21,11 @@ export const maxAttemptOtpKey = ({email,subject=emailEnum.confirmEmail}) => {
 export const blockAttemptOtpKey = ({email,subject=emailEnum.confirmEmail}) => {
   return `${otpKey({email,subject})}::block`;
 };
-
+// block after 5
+export const loginBlockKey = ({ email }) => `Login::Block::${email}`;
+export const loginAttemptsKey = ({ email }) => `Login::Attempts::${email}`;
+//one time link
+export const forgotPasswordLinkKey = ({ token }) => `ForgotPwd::Link::${token}`;
 
 
 
@@ -95,6 +99,26 @@ export const deleteKey = async (key) => {
     return false;
   }
 };
+
+// export const deleteKey = async (key) => {
+//   try {
+//     if (!key) return false;
+
+//     // لو array
+//     if (Array.isArray(key)) {
+//       if (!key.length) return true;
+//       await redisClient.del(key);
+//       return true;
+//     }
+
+//     // لو string
+//     const result = await redisClient.del(key);
+//     return result === 1;
+//   } catch (error) {
+//     console.error("Redis DELETE error:", error);
+//     return false;
+//   }
+// };
 
 export const expire = async (key, ttl) => {
   try {

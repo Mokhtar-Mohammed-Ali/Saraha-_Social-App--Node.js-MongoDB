@@ -5,11 +5,13 @@
 //   TOKEN_SECRET_USER_REFRESH,
 // } from "../../../config/config.service.js";
 // import { TokenTypeEnum } from "../../common/enums/security.enums.js";
+import fs from "node:fs";
+import { resolve } from "node:path";
 import {
   ACCESS_TOKEN_EXPIRATION,
   REFRESH_TOKEN_EXPIRATION,
 } from "../../../config/config.service.js";
-import { logoutEnumms } from "../../common/enums/user.enums.js";
+import { logoutEnumms, RoleEnumms } from "../../common/enums/user.enums.js";
 import {
   allKeysByPrefix,
   deleteKey,
@@ -19,8 +21,10 @@ import {
 } from "../../common/services/redis.services.js";
 import {
   BadRequestException,
+  compareHash,
   ConflictException,
   encrypt,
+  generateHash,
   NotFoundException,
 } from "../../common/utils/index.js";
 import {
@@ -34,8 +38,7 @@ import {
   findOne,
   updateOne,
 } from "../../DB/database.repository.js";
-import { tokenModel, userModel } from "../../DB/index.js";
-
+import { userModel } from "../../DB/index.js";
 
 // import jwt from "jsonwebtoken";
 // import {users} from '../../DB/model/index.js'
@@ -62,20 +65,54 @@ export const profile = async (user) => {
 
   return user;
 };
-// shared profile
-export const sharedProfile = async (userId) => {
+// shared profile without visit count
+// export const sharedProfile = async (userId) => {
+//   const account = await findOne({
+//     model: userModel,
+//     filter: { _id: userId },
+//     select: "-passsword",
+//   });
+//   if (!account) {
+//     throw NotFoundException("user not found");
+//   }
+//   if (account.phone) {
+//     account.phone = await encrypt(account.phone);
+//   }
+//   return account;
+// };
+
+// shared profile with visit count
+
+export const sharedProfile = async (userId, currentUser = null) => {
   const account = await findOne({
     model: userModel,
     filter: { _id: userId },
-    select: "-passsword",
+    select: "-password",
   });
+
   if (!account) {
-    throw NotFoundException("user not found");
+    throw NotFoundException("User not found");
   }
+
+  await updateOne({
+    model: userModel,
+    filter: { _id: userId },
+    update: { $inc: { visitCount: 1 } },
+  });
+
   if (account.phone) {
     account.phone = await encrypt(account.phone);
   }
-  return account;
+
+  const result = account.toObject();
+
+  if (!currentUser || currentUser.role !== RoleEnumms.Admin) {
+    delete result.visitCount;
+  } else {
+    result.visitCount = (result.visitCount || 0) + 1;
+  }
+
+  return result;
 };
 // profile image
 export const profileImage = async (file, user) => {
@@ -161,12 +198,12 @@ export const rotateToken = async (user, { jti, iat, sub }, issuer) => {
   //   },
   // });
 
-//after redis
-await set({
-       key: revokeTokenKey({ userId: sub, jti }),
-       value: jti,
-        ttl:iat + REFRESH_TOKEN_EXPIRATION,
-      });
+  //after redis
+  await set({
+    key: revokeTokenKey({ userId: sub, jti }),
+    value: jti,
+    ttl: iat + REFRESH_TOKEN_EXPIRATION,
+  });
 
   // const decoded = jwt.decode(authorization);
   // const account = await decodeToken({token:authorization, tokenType: TokenTypeEnum.REFRESH });
@@ -208,8 +245,8 @@ export const logout = async ({ flag }, user, { jti, iat, sub }) => {
 
       // after redis
       await user.save();
-const keys = await allKeysByPrefix(`${revokeTokenKeyPrefix(sub)}`);
-await deleteKey(keys);
+      const keys = await allKeysByPrefix(`${revokeTokenKeyPrefix(sub)}`);
+      await deleteKey(keys);
       break;
     case logoutEnumms.ONLY:
       //without redis
@@ -224,12 +261,70 @@ await deleteKey(keys);
 
       //with redis
       await set({
-       key: revokeTokenKey({ userId: sub, jti }),
-        value:jti,
-        ttl:iat + REFRESH_TOKEN_EXPIRATION,
+        key: revokeTokenKey({ userId: sub, jti }),
+        value: jti,
+        ttl: iat + REFRESH_TOKEN_EXPIRATION,
       });
       status = 201;
       break;
   }
   return status;
+};
+// delete profile image
+
+export const removeProfileImage = async (user) => {
+  if (!user.profilePic) {
+    throw BadRequestException({ message: "No profile image found to delete" });
+  }
+
+  const fullPath = resolve(user.profilePic);
+
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
+  }
+
+  user.profilePic = null;
+  await user.save();
+
+  return user;
+};
+
+// update password
+
+export const updatePassword = async (
+  { oldPassword, password },
+  user,
+  issuer,
+) => {
+  // user can use old password in update password
+  // if (
+  //   (!await compareHash({
+  //     plainText: oldPassword,
+  //     hashedPassword: user.password,
+  //   }))
+  // ) {
+  //   throw BadRequestException({ message: "invalid password" });
+  // }
+
+  // user can't use old password as he used it before
+  for (const hash of user.oldPassword || []) {
+    if (
+      (await compareHash({
+        plainText: password,
+        hashedPassword: hash,
+        
+      }))
+    ) {
+      throw BadRequestException({
+        message: "this password already used before ❌ ",
+      });
+    }
+  }
+  user.oldPassword.push(user.password);
+  user.password = await generateHash({ plainText: password });
+  user.changeCredentialsTime = new Date();
+  await user.save();
+  await deleteKey(await allKeysByPrefix(revokeTokenKeyPrefix(user._id)));
+
+  return await loginCredentials(user, issuer);
 };

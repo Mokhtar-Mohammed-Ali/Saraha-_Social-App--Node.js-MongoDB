@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema(
       default: GenderEnumms.Male,
     },
     password: { type: String,  required: function () { return this.provider == ProviderEnumms.SYSTEM; } },
+    oldPassword:{ type: [String] },
     // phone: { type: String, required: true },
     phone: { 
   type: String, 
@@ -48,7 +49,15 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(RoleEnumms),
       default: RoleEnumms.User,
     },
+    visitCount: { type: Number,default:0},
+    // 2 step ver
+    is2FA: { type: Boolean, default: false }, 
+createdAt: { 
+  type: Date, 
+  default: Date.now, 
+  expires: 86400 }
   },
+  
   {
     timestamps: true,
     collection: "SARAHA_USERS",

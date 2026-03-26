@@ -1,43 +1,105 @@
-Saraha - Anonymous Messaging App
+# 🛡️ Saraha - Advanced Anonymous Messaging API
 
-Saraha is a Node.js application for anonymous messaging, inspired by apps like "Sarahah". Users can sign up, log in, send and receive messages anonymously, and verify their email via OTP. The app now supports JWT authentication, role-based authorization, and Google OAuth login/signup.
+An industrial-grade Node.js backend application for anonymous messaging, inspired by apps like "Sarahah". This version is heavily optimized for **Security**, **Scalability**, and **High Availability** using modern architectural patterns.
 
-Features
+---
 
-User signup and login with secure password hashing.
+## 🚀 Key Features
 
-Google OAuth2 signup/login (login with Google account).
+### 🔐 Security & Authentication
+* **Dual Auth Strategy:** Support for standard Email/Password and **Google OAuth 2.0** social login.
+* **JWT Ecosystem:** Secure session management with Access & Refresh tokens.
+* **Password Hashing:** Industry-standard encryption using `bcrypt`.
+* **RBAC (Role-Based Access Control):** Granular permission system for **Admin** and **User** roles.
 
-JWT-based authentication for secure API access.
+### ⚡ Performance & Reliability
+* **Redis Integration:** High-speed caching for OTP management and session blacklisting.
+* **Smart Rate Limiting:** Advanced protection against Brute-force and DoS attacks (via Redis).
+* **OTP Verification:** Secure email confirmation system with a strictly enforced 5-minute TTL.
 
-Role-based access control (Admin/User) for protecting routes.
+### 📩 Messaging & Media
+* **True Anonymity:** Robust logic for sending and receiving messages without compromising sender identity.
+* **Media Handling:** Scalable file upload utility (via `Multer`) with custom MIME-type validation for Images, Audio, and Video.
 
-OTP verification for email confirmation (valid for 5 minutes).
+### 🏗️ Architecture
+* **Modular Design:** Clean separation of concerns (Controllers, Services, Repositories).
+* **Unified Responses:** Standardized JSON success/error structures for seamless Frontend integration.
+* **Global Error Handling:** Centralized middleware to capture and log exceptions.
 
-Send and receive anonymous messages.
+---
 
-MongoDB integration for storing users and messages.
+## 🛠️ Tech Stack
 
-Optional image uploads (using Multer).
+| Category | Technology |
+| :--- | :--- |
+| **Runtime** | Node.js (Express.js) |
+| **Database** | MongoDB (Mongoose) |
+| **Caching/Rates** | **Redis** (OTP & Rate Limiting) |
+| **Auth** | JWT, Passport.js (Google OAuth2) |
+| **Storage** | Multer (Custom MIME Validation) |
+| **Emailing** | Nodemailer |
+| **Security** | Bcrypt, Helmet, CORS |
 
-Clean project structure with controllers, services, and reusable DB utilities.
+---
 
-Standardized error and success responses.
+## 📂 Project Structure
 
-Tech Stack
+```text
+├── src/
+│   ├── controllers/    # Request handling logic
+│   ├── services/       # Business logic & Database interactions
+│   ├── middlewares/    # Auth, Validation, & Rate-limiting
+│   ├── models/         # Mongoose schemas
+│   ├── utils/          # Reusable helpers (Redis, Multer, JWT)
+│   ├── config/         # Environment & DB configurations
+│   └── app.js          # Main entry point
+├── uploads/            # Local storage for media files
+└── .env                # Secret keys & Configurations
 
-Node.js (Express.js)
+🔌 API Endpoints (Quick Reference)
+🔑 Authentication
+POST /auth/signup - Register a new user (triggers OTP).
 
-MongoDB (Mongoose)
+POST /auth/login - Standard login (Email/Password).
 
-Nodemailer (for sending OTP emails)
+GET /auth/google - Google OAuth2 login entry.
 
-bcrypt (for password hashing)
+POST /auth/verify-otp - Confirm email via 6-digit code.
 
-dotenv (for environment variables)
+📩 Messages
+POST /messages/send - Send an anonymous message to a user.
 
-JSON Web Tokens (JWT) for authentication
+GET /messages/inbox - Retrieve received messages (Auth Required).
 
-Google OAuth2 for social login
+DELETE /messages/:id - Remove a message.
 
-Multer for image uploads
+👤 User Profile
+GET /user/me - Get current user info.
+
+PATCH /user/update - Update profile details or upload avatar.
+
+⚙️ Environment Variables
+To run this project, you will need to add the following variables to your .env file:
+
+مقتطف الرمز
+PORT=3000
+MONGO_URI=your_mongodb_connection
+REDIS_URL=your_redis_connection
+JWT_SECRET=your_secret_key
+EMAIL_USER=your_email
+EMAIL_PASS=your_app_password
+GOOGLE_CLIENT_ID=your_id
+GOOGLE_CLIENT_SECRET=your_secret
+🚦 Getting Started
+Clone the repository:
+
+Bash
+git clone https://github.com/Mokhtar-Mohammed-Ali/saraha-api.git
+Install dependencies:
+
+Bash
+npm install
+Run in development mode:
+
+Bash
+npm run dev

@@ -18,7 +18,6 @@ import {
 import { TokenTypeEnum } from "../../enums/security.enums.js";
 import { RoleEnumms } from "../../enums/user.enums.js";
 import { model } from "mongoose";
-import { tokenModel } from "../../../DB/index.js";
 import { get, revokeTokenKey } from "../../services/redis.services.js";
 // generate token
 export const generateToken = async ({

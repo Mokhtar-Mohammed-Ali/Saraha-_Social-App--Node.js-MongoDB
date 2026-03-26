@@ -46,3 +46,12 @@ profileCoverImage:joi.array().items(generalValidationFields.file(fileFieldValida
     .required(),
 };
 
+export const updatePassword = {
+
+   body:joi.object().keys({
+    oldPassword:generalValidationFields.password.required(),
+    password:generalValidationFields.password.not(joi.ref("oldPassword")).required(),
+    confirmPassword:generalValidationFields.confirmPassword("password").required()
+
+   }) .required(),
+};

@@ -31,3 +31,10 @@ export const resendConfirmEmail = {
    
   }).required(),
 };
+
+export const resetPasswordCode = {
+ body:confirmEmail.body.append().keys({
+  password:generalValidationFields.password.required(),
+  confirmPassword:generalValidationFields.confirmPassword("password").required()
+ }).required()
+};

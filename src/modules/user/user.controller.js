@@ -6,6 +6,8 @@ import {
   rotateToken,
   sharedProfile,
   logout,
+  removeProfileImage,
+  updatePassword,
 } from "./user.service.js";
 import {
   fileFieldValidation,
@@ -24,14 +26,13 @@ import { validation } from "../../middlware/validation.middleware.js";
 const router = Router();
 
 //logout route
-router.post("/logout",authenticationMiddleware(),async (req, res, next) => {
-  const status =await logout(req.body,req.user,req.decoded);
+router.post("/logout", authenticationMiddleware(), async (req, res, next) => {
+  const status = await logout(req.body, req.user, req.decoded);
   return SuccessResponse({
     res,
-    data: { status }
+    data: { status },
   });
-}
-)
+});
 
 // profile route
 router.get(
@@ -47,11 +48,25 @@ router.get(
   },
 );
 //shared profile route
+// router.get(
+//   "/:userId/shared-profile",
+//   validation(validators.sharedProfileValidation),
+//   async (req, res, next) => {
+//     const result = await sharedProfile(req.params.userId);
+//     return SuccessResponse({
+//       res,
+//       data: result,
+//     });
+//   },
+// );
+
 router.get(
   "/:userId/shared-profile",
+  authenticationMiddleware(),
   validation(validators.sharedProfileValidation),
   async (req, res, next) => {
-    const result = await sharedProfile(req.params.userId);
+    const result = await sharedProfile(req.params.userId, req.user);
+
     return SuccessResponse({
       res,
       data: result,
@@ -77,6 +92,19 @@ router.patch(
     });
   },
 );
+// delete profile image
+router.delete(
+  "/profile-image",
+  authenticationMiddleware(),
+  async (req, res, next) => {
+    const account = await removeProfileImage(req.user);
+    return SuccessResponse({
+      res,
+      message: "Profile image removed successfully",
+      data: { account },
+    });
+  },
+);
 
 //profile cover images route
 
@@ -87,7 +115,7 @@ router.patch(
     customPath: "profile/covers",
     validation: fileFieldValidation.image,
   }).array("attachments", 5),
-    validation(validators.profileCoverImageValidation),
+  validation(validators.profileCoverImageValidation),
 
   async (req, res, next) => {
     console.log(req.files);
@@ -110,12 +138,11 @@ router.patch(
     //     data: { files:req.files },
     //   });
 
-
     // any file upload with any field name
     // .any()
     // async (req, res, next) => {
     //   console.log(req.files);
-      // const account = await profileCoverImage(req.files, req.user);
+    // const account = await profileCoverImage(req.files, req.user);
     //   return SuccessResponse({
     //     res,
     //     data: { files:req.files },
@@ -137,11 +164,34 @@ router.post(
   "/refresh",
   authenticationMiddleware(TokenTypeEnum.REFRESH),
   async (req, res, next) => {
-    const credentials = await rotateToken(req.user, req.decoded, `${req.protocol}://${req.host}`);
+    const credentials = await rotateToken(
+      req.user,
+      req.decoded,
+      `${req.protocol}://${req.host}`,
+    );
     return SuccessResponse({
       res,
       status: 201,
       data: { ...credentials },
+    });
+  },
+);
+
+// update password
+router.patch(
+  "/password",
+  authenticationMiddleware(),
+  validation(validators.updatePassword),
+
+  async (req, res, next) => {
+    const credintials = await updatePassword(
+      req.body,
+      req.user,
+      `${req.protocol}://${req.host}`,
+    );
+    return SuccessResponse({
+      res,
+      data: { ...credintials }
     });
   },
 );

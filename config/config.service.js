@@ -12,6 +12,7 @@ console.log({ en: envPath[NODE_ENV] });
 config({ path: resolve(`./config/${envPath[NODE_ENV]}`) });
 
 export const port = process.env.PORT ?? 7000;
+export const BAS_URL = process.env.BAS_URL;
 
 export const DB_URI = process.env.DB_URI;
 export const REDI_URI = process.env.REDI_URI;
@@ -37,4 +38,8 @@ export const WEB_CLIENT_ID = process.env.WEB_CLIENT_ID;
 export const Twitter_LINK = process.env.Twitter_LINK;
 export const Facebook_LINK = process.env.Facebook_LINK;
 export const Instagram_LINK = process.env.Instagram_LINK;
+//origins
+export const ALLOW_ORIGINS=process.env.ALLOW_ORIGINS
 console.log({ SALT_ROUND });
+
+//
